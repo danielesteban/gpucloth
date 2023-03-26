@@ -16,7 +16,7 @@ class Camera {
     this.near = -100;
     this.far = 100;
     this.zoom = 200;
-    this.position = vec2.fromValues(0, -16);
+    this.position = vec2.fromValues(0, -24);
 
     this.matrix = mat4.create();
     this.matrixInverse = mat4.create();
@@ -36,8 +36,17 @@ class Camera {
     return this.matrixInverse;
   }
 
+  getZoom() {
+    return this.zoom;
+  }
+
   setAspect(aspect: number) {
     this.aspect = aspect;
+    this.update();
+  }
+
+  setZoom(zoom: number) {
+    this.zoom = zoom;
     this.update();
   }
 

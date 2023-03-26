@@ -42,6 +42,14 @@ body, #app {
   left: 1rem;
 }
 
+#help > div {
+  color: #bbb;
+}
+
+#help > span {
+  color: #999;
+}
+
 #info {
   right: 1rem;
   text-align: right;

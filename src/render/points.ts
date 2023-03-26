@@ -5,9 +5,9 @@ const Vertex = `
 struct VertexInput {
   @location(0) position: vec2<f32>,
   @location(1) uv: vec2<f32>,
-  @location(2) uv2: vec2<f32>,
-  @location(3) size: f32,
-  @location(4) instance: vec2<f32>,
+  @location(2) isize: f32,
+  @location(3) iuv: vec2<f32>,
+  @location(4) iposition: vec2<f32>,
 }
 struct VertexOutput {
   @builtin(position) position: vec4<f32>,
@@ -21,10 +21,10 @@ struct VertexOutput {
 @vertex
 fn main(vertex: VertexInput) -> VertexOutput {
   var out : VertexOutput;
-  out.position = camera * vec4<f32>(vertex.position * vertex.size + vertex.instance, 0, 1);
+  out.position = camera * vec4<f32>(vertex.position * vertex.isize + vertex.iposition, 0, 1);
   out.uv = (vertex.uv - 0.5) * 2;
-  out.uv2 = vertex.uv2;
-  out.size = vertex.size;
+  out.uv2 = vertex.iuv;
+  out.size = vertex.isize;
   return out;
 }
 `;
@@ -116,12 +116,12 @@ class Points {
               {
                 shaderLocation: 2,
                 offset: 1 * Float32Array.BYTES_PER_ELEMENT,
-                format: 'float32x2',
+                format: 'float32',
               },
               {
                 shaderLocation: 3,
-                offset: 3 * Float32Array.BYTES_PER_ELEMENT,
-                format: 'float32',
+                offset: 2 * Float32Array.BYTES_PER_ELEMENT,
+                format: 'float32x2',
               },
             ],
           },
@@ -245,13 +245,13 @@ class Points {
 
   render(pass: GPURenderPassEncoder) {
     const { bindings, geometry, pipeline, simulation } = this;
+    const { count, data, points } = simulation.getInstances();
     pass.setPipeline(pipeline);
     pass.setBindGroup(0, bindings);
     pass.setVertexBuffer(0, geometry);
-    const instances = simulation.getInstances();
-    pass.setVertexBuffer(1, instances.data);
-    pass.setVertexBuffer(2, instances.points);
-    pass.draw(6, instances.count, 0, 0);
+    pass.setVertexBuffer(1, data);
+    pass.setVertexBuffer(2, points);
+    pass.draw(6, count, 0, 0);
   }
 }
 

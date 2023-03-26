@@ -1,26 +1,21 @@
 import { vec2 } from 'gl-matrix';
 import Camera from '../render/camera';
 
+const _pointer = vec2.create();
+
 class Input {
-  private readonly buttons: {
-    primary: boolean;
-    secondary: boolean;
-  };
   private readonly pointer: {
     id: number;
+    button: number;
     position: vec2;
   };
 
   constructor(target: HTMLCanvasElement) {
-    this.buttons = {
-      primary: false,
-      secondary: false,
-    };
     this.pointer = {
       id: -1,
+      button: 0,
       position: vec2.create(),
     };
-    window.addEventListener('blur', this.onBlur.bind(this));
     target.addEventListener('pointerdown', this.onPointerDown.bind(this));
     window.addEventListener('pointermove', this.onPointerMove.bind(this));
     target.addEventListener('pointerup', this.onPointerUp.bind(this));
@@ -48,37 +43,24 @@ class Input {
     }
   }
 
-  getButton(button: 'primary' | 'secondary') {
-    return this.buttons[button];
+  getPointer(camera: Camera) {
+    const { pointer: { button, position } } = this;
+    vec2.set(_pointer, position[0], position[1]);
+    vec2.transformMat4(_pointer, _pointer, camera.getMatrixInverse());
+    return {
+      button,
+      position: _pointer,
+    };
   }
 
-  getPointer(camera: Camera, output: vec2) {
-    const { pointer: { position } } = this;
-    vec2.set(output, position[0], position[1]);
-    vec2.transformMat4(output, output, camera.getMatrixInverse());
-    return output;
-  }
-
-  private onBlur() {
-    const { buttons } = this;
-    buttons.primary = buttons.secondary = false;
-  }
-
-  private onPointerDown({ button, pointerId, target }: PointerEvent) {
+  private onPointerDown({ buttons, pointerId, target }: PointerEvent) {
     (target as HTMLCanvasElement).setPointerCapture(pointerId);
-    const { buttons, pointer } = this;
+    const { pointer } = this;
     if (pointer.id !== -1) {
       return;
     }
     pointer.id = pointerId;
-    switch (button) {
-      case 0:
-        buttons.primary = true;
-        break;
-      case 2:
-        buttons.secondary = true;
-        break;
-    }
+    pointer.button = buttons;
   }
 
   private onPointerMove({ pointerId, clientX, clientY }: PointerEvent) {
@@ -93,21 +75,14 @@ class Input {
     );
   }
 
-  private onPointerUp({ button, pointerId, target }: PointerEvent) {
+  private onPointerUp({ pointerId, target }: PointerEvent) {
     (target as HTMLCanvasElement).releasePointerCapture(pointerId);
-    const { buttons, pointer } = this;
+    const { pointer } = this;
     if (pointer.id !== pointerId) {
       return;
     }
     pointer.id = -1;
-    switch (button) {
-      case 0:
-        buttons.primary = false;
-        break;
-      case 2:
-        buttons.secondary = false;
-        break;
-    }
+    pointer.button = 0;
   }
 }
 

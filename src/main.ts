@@ -1,5 +1,4 @@
 import './main.css';
-import { vec2 } from 'gl-matrix';
 import Camera from './render/camera';
 import Input from './compute/input';
 import Renderer from './render/renderer';
@@ -16,14 +15,19 @@ const Main = (device: GPUDevice) => {
   }
   dom.appendChild(renderer.getCanvas());
   renderer.setSize(window.innerWidth, window.innerHeight);
+  window.addEventListener('keydown', ({ key, repeat }) => (
+    !repeat && key === 'Escape' && simulation.reset()
+  ));
   window.addEventListener('resize', () => (
     renderer.setSize(window.innerWidth, window.innerHeight)
+  ));
+  window.addEventListener('wheel', ({ deltaY }) => (
+    camera.setZoom(Math.min(Math.max(camera.getZoom() * (1 + deltaY * 0.001), 200), 400))
   ));
 
   let animation: number;
   let clock = performance.now() / 1000;
   const input = new Input(renderer.getCanvas());
-  const pointer = vec2.create();
   const animate = () => {
     animation = requestAnimationFrame(animate);
     const time = performance.now() / 1000;
@@ -31,7 +35,7 @@ const Main = (device: GPUDevice) => {
     clock = time;
 
     const command = device.createCommandEncoder();
-    simulation.compute(command, delta, input.getPointer(camera, pointer));
+    simulation.compute(command, delta, input.getPointer(camera));
     renderer.render(command);
     device.queue.submit([command.finish()]);
   };
