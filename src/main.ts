@@ -40,11 +40,10 @@ const Main = (device: GPUDevice) => {
     device.queue.submit([command.finish()]);
   };
   document.addEventListener('visibilitychange', () => {
+    cancelAnimationFrame(animation);
     if (document.visibilityState === 'visible') {
       clock = performance.now() / 1000;
       animation = requestAnimationFrame(animate);
-    } else {
-      cancelAnimationFrame(animation);
     }
   });
   animation = requestAnimationFrame(animate);

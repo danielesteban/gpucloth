@@ -7,8 +7,8 @@ class Simulation {
   private device: GPUDevice;
   private readonly count: number;
   private readonly initial: {
-    joints: Uint32Array;
-    points: Float32Array;
+    joints: ArrayBuffer;
+    points: ArrayBuffer;
   };
   private readonly data: GPUBuffer;
   private readonly joints: GPUBuffer;
@@ -19,11 +19,13 @@ class Simulation {
   };
   private step: number = 0;
   private readonly uniforms: {
-    buffer: GPUBuffer,
-    data: Float32Array,
     button: Uint32Array,
     delta: Float32Array,
     pointer: Float32Array,
+    buffers: {
+      cpu: ArrayBuffer,
+      gpu: GPUBuffer,
+    },
   };
 
   constructor(device: GPUDevice) {
@@ -32,57 +34,64 @@ class Simulation {
     this.device = device;
     this.initial = { joints, points };
 
-    this.data = device.createBuffer({
-      mappedAtCreation: true,
-      size: data.byteLength,
-      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.VERTEX,
-    });
-    new Float32Array(this.data.getMappedRange()).set(data);
-    this.data.unmap();
-   
-    this.joints = device.createBuffer({
-      mappedAtCreation: true,
-      size: joints.byteLength,
-      usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
-    });
-    new Uint32Array(this.joints.getMappedRange()).set(joints);
-    this.joints.unmap();
-
-    this.points = Array.from({ length: 2 }, () => {
+    const buffer = (data: ArrayBuffer, usage: number) => {
       const buffer = device.createBuffer({
         mappedAtCreation: true,
-        size: points.byteLength,
-        usage: (
-          GPUBufferUsage.COPY_DST
-          | GPUBufferUsage.STORAGE
-          | GPUBufferUsage.VERTEX
-        ),
+        size: data.byteLength,
+        usage,
       });
-      new Float32Array(buffer.getMappedRange()).set(points);
+      new Uint32Array(buffer.getMappedRange()).set(new Uint32Array(data));
       buffer.unmap();
       return buffer;
-    });
+    };
+
+    this.data = buffer(
+      data,
+      GPUBufferUsage.STORAGE | GPUBufferUsage.VERTEX
+    );
+    this.joints = buffer(
+      joints,
+      GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE
+    );
+    this.points = Array.from({ length: 2 }, () => buffer(
+      points,
+      GPUBufferUsage.COPY_DST
+      | GPUBufferUsage.STORAGE
+      | GPUBufferUsage.VERTEX
+    ));
 
     {
-      const data = new Float32Array(4);
+      const cpu = new ArrayBuffer(16);
       this.uniforms = {
-        buffer: device.createBuffer({
-          size: data.byteLength,
-          usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.UNIFORM,
-        }),
-        data,
-        button: new Uint32Array(data.buffer, 0, 1),
-        delta: data.subarray(1, 2),
-        pointer: data.subarray(2, 4),
+        button: new Uint32Array(cpu, 0, 1),
+        delta: new Float32Array(cpu, 4, 1),
+        pointer: new Float32Array(cpu, 8, 2),
+        buffers: {
+          cpu,
+          gpu: device.createBuffer({
+            size: cpu.byteLength,
+            usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.UNIFORM,
+          }),
+        },
       };
     }
   
     this.pipelines = {
       constraint: new ConstrainSimulation(
-        device, this.data, this.joints, numJoints, this.points, numPoints, this.uniforms.buffer
+        device,
+        this.data,
+        this.joints,
+        numJoints,
+        this.points,
+        numPoints,
+        this.uniforms.buffers.gpu
       ),
       step: new StepSimulation(
-        device, this.data, this.points, numPoints, this.uniforms.buffer
+        device,
+        this.data,
+        this.points,
+        numPoints,
+        this.uniforms.buffers.gpu
       ),
     };
   }
@@ -105,7 +114,7 @@ class Simulation {
     uniforms.delta[0] = delta;
     uniforms.button[0] = pointer.button;
     uniforms.pointer.set(pointer.position);
-    device.queue.writeBuffer(uniforms.buffer, 0, uniforms.data);
+    device.queue.writeBuffer(uniforms.buffers.gpu, 0, uniforms.buffers.cpu);
 
     const pass = command.beginComputePass();
     pipelines.step.compute(pass, step);

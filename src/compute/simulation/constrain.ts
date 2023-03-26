@@ -1,4 +1,4 @@
-import { Data, Joint, Uniforms } from './structs';
+import { Data, Joint, Uniforms } from './types';
 
 const Compute = (numIterations: number, numPoints: number, numJoints: number) => /* wgsl */`
 ${Data}
