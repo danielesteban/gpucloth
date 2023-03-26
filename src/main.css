@@ -1,0 +1,48 @@
+:root {
+  font-size: 16px;
+  width: 100vw;
+  height: 100%;
+}
+
+a {
+  color: inherit;
+}
+
+canvas {
+  vertical-align: middle;
+}
+
+body {
+  margin: 0;
+  background: #000;
+  color: #eee;
+  cursor: default;
+  user-select: none;
+  overflow: hidden;
+  font-family: 'Roboto Condensed', monospace;
+  font-size: 0.75rem;
+  line-height: 1.125rem;
+  touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-text-size-adjust: none;
+  overflow: hidden;
+}
+
+body, #app {
+  width: 100vw;
+  height: 100%;
+}
+
+#help, #info {
+  position: absolute;
+  bottom: 1rem;
+}
+
+#help {
+  left: 1rem;
+}
+
+#info {
+  right: 1rem;
+  text-align: right;
+}
