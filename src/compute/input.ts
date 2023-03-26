@@ -1,12 +1,11 @@
 import { vec2 } from 'gl-matrix';
 import Camera from '../render/camera';
 
-const _pointer = vec2.create();
-
 class Input {
   private readonly pointer: {
     id: number;
     button: number;
+    normalized: vec2;
     position: vec2;
   };
 
@@ -14,6 +13,7 @@ class Input {
     this.pointer = {
       id: -1,
       button: 0,
+      normalized: vec2.create(),
       position: vec2.create(),
     };
     target.addEventListener('pointerdown', this.onPointerDown.bind(this));
@@ -44,13 +44,13 @@ class Input {
   }
 
   getPointer(camera: Camera) {
-    const { pointer: { button, position } } = this;
-    vec2.set(_pointer, position[0], position[1]);
-    vec2.transformMat4(_pointer, _pointer, camera.getMatrixInverse());
-    return {
-      button,
-      position: _pointer,
-    };
+    const { pointer } = this;
+    vec2.transformMat4(
+      pointer.position,
+      pointer.normalized,
+      camera.getMatrixInverse()
+    );
+    return pointer;
   }
 
   private onPointerDown({ buttons, pointerId, target }: PointerEvent) {
@@ -69,7 +69,7 @@ class Input {
       return;
     }
     vec2.set(
-      pointer.position,
+      pointer.normalized,
       (clientX / window.innerWidth) * 2 - 1,
       -(clientY / window.innerHeight) * 2 + 1
     );

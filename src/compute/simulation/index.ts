@@ -95,7 +95,11 @@ class Simulation {
     };
   }
 
-  compute(command: GPUCommandEncoder, delta: number, pointer: { button: number; position: vec2; }) {
+  compute(
+    command: GPUCommandEncoder,
+    delta: number,
+    pointer: { button: number; position: vec2; }
+  ) {
     const { device, pipelines, step, uniforms } = this;
 
     uniforms.delta[0] = delta;
