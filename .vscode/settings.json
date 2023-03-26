@@ -1,0 +1,16 @@
+{
+  "editor.tabSize": 2,
+  "files.eol": "\n",
+  "search.exclude": {
+    "**/.github": true,
+    "**/.vscode": true,
+    "**/dist": true,
+    "**/node_modules": true,
+  },
+  "files.exclude": {
+    "**/.github": true,
+    "**/.vscode": true,
+    "**/dist": true,
+    "**/node_modules": true,
+  }
+}

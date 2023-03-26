@@ -1,7 +1,7 @@
 import Camera from './camera';
 import Simulation from '../compute/simulation';
 
-const Vertex = `
+const Vertex = /* wgsl */`
 struct VertexInput {
   @location(0) position: vec2<f32>,
   @location(1) uv: vec2<f32>,
@@ -29,7 +29,7 @@ fn main(vertex: VertexInput) -> VertexOutput {
 }
 `;
 
-const Fragment = `
+const Fragment = /* wgsl */`
 struct FragmentInput {
   @location(0) uv: vec2<f32>,
   @location(1) uv2: vec2<f32>,
@@ -194,6 +194,17 @@ class Points {
     this.generateDefaultTexture();
   }
 
+  render(pass: GPURenderPassEncoder) {
+    const { bindings, geometry, pipeline, simulation } = this;
+    const { count, data, points } = simulation.getInstances();
+    pass.setPipeline(pipeline);
+    pass.setBindGroup(0, bindings);
+    pass.setVertexBuffer(0, geometry);
+    pass.setVertexBuffer(1, data);
+    pass.setVertexBuffer(2, points);
+    pass.draw(6, count, 0, 0);
+  }
+
   setTexture(file: Blob) {
     const image = new Image();
     image.addEventListener('load', () => {
@@ -241,17 +252,6 @@ class Points {
     const { device, texture } = this;
     const source = await createImageBitmap(canvas)
     device.queue.copyExternalImageToTexture({ source, flipY: true }, { texture }, [512, 512]);
-  }
-
-  render(pass: GPURenderPassEncoder) {
-    const { bindings, geometry, pipeline, simulation } = this;
-    const { count, data, points } = simulation.getInstances();
-    pass.setPipeline(pipeline);
-    pass.setBindGroup(0, bindings);
-    pass.setVertexBuffer(0, geometry);
-    pass.setVertexBuffer(1, data);
-    pass.setVertexBuffer(2, points);
-    pass.draw(6, count, 0, 0);
   }
 }
 
