@@ -2,6 +2,7 @@ import { vec2 } from 'gl-matrix';
 import Camera from '../render/camera';
 
 class Input {
+  private hotkeys: Record<string, () => void> = {};
   private readonly pointer: {
     id: number;
     button: number;
@@ -16,6 +17,7 @@ class Input {
       normalized: vec2.fromValues(-1, -1),
       position: vec2.create(),
     };
+    window.addEventListener('keydown', this.onKeyDown.bind(this));
     target.addEventListener('pointerdown', this.onPointerDown.bind(this));
     window.addEventListener('pointermove', this.onPointerMove.bind(this));
     target.addEventListener('pointerup', this.onPointerUp.bind(this));
@@ -51,6 +53,24 @@ class Input {
       camera.getMatrixInverse()
     );
     return pointer;
+  }
+
+  setHotkeys(hotkeys: Record<string, () => void>) {
+    this.hotkeys = hotkeys;
+  }
+  
+  private onKeyDown({ key, repeat, target }: KeyboardEvent) {
+    const { hotkeys } = this;
+    const handler = hotkeys[key.toLowerCase()];
+    if (
+      handler
+      && !repeat
+      && !['input', 'textarea', 'select'].includes(
+        (target as HTMLElement).tagName.toLowerCase()
+      )
+    ) {
+      handler();
+    }
   }
 
   private onPointerDown({ buttons, pointerId, target }: PointerEvent) {

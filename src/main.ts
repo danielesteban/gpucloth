@@ -21,38 +21,25 @@ const Main = (device: GPUDevice) => {
     simulation.compute(command, delta, input.getPointer(camera))
   ));
   renderer.setSize(window.innerWidth, window.innerHeight);
-  simulation.load(Cloth());
 
   const lines = new Lines(camera, device, renderer.getFormat(), renderer.getSamples(), simulation);
   renderer.add(lines);
-
   const points = new Points(camera, device, renderer.getFormat(), renderer.getSamples(), simulation);
   renderer.add(points);
 
+  simulation.load(Cloth());
+
+  input.setHotkeys({
+    1: () => simulation.load(Cloth()),
+    2: () => simulation.load(Cloth(1)),
+    3: () => simulation.load(Ropes()),
+    'escape': () => simulation.reset(),
+  });
   window.addEventListener('drop', (e) => {
     e.preventDefault();
     const [file] = e.dataTransfer?.files || [];
     if (file && file.type.indexOf('image/') === 0) {
       points.setTexture(file);
-    }
-  });
-  window.addEventListener('keydown', ({ key, repeat }) => {
-    if (repeat) {
-      return;
-    }
-    switch (key) {
-      case 'Escape':
-        simulation.reset()
-        break;
-      case '1':
-        simulation.load(Cloth());
-        break;
-      case '2':
-        simulation.load(Cloth(1));
-        break;
-      case '3':
-        simulation.load(Ropes());
-        break;
     }
   });
   window.addEventListener('resize', () => (
