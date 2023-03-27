@@ -47,6 +47,7 @@ class Lines {
     camera: Camera,
     device: GPUDevice,
     format: GPUTextureFormat,
+    samples: number,
     simulation: Simulation,
   ) {
     this.geometry = Plane(device);
@@ -105,6 +106,9 @@ class Lines {
       },
       primitive: {
         topology: 'triangle-list',
+      },
+      multisample: {
+        count: samples,
       },
     });
     this.bindings = device.createBindGroup({

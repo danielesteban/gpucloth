@@ -12,7 +12,9 @@ class Renderer {
   private readonly descriptor: GPURenderPassDescriptor;
   private readonly device: GPUDevice;
   private readonly format: GPUTextureFormat;
+  private readonly samples: number = 4;
   private readonly scene: { render: (pass: GPURenderPassEncoder) => void }[];
+  private target: GPUTexture = undefined as unknown as GPUTexture;
 
   constructor(camera: Camera, device: GPUDevice) {
     this.camera = camera;
@@ -59,6 +61,10 @@ class Renderer {
     return this.format;
   }
 
+  getSamples() {
+    return this.samples;
+  }
+
   setAnimationLoop(loop: (command: GPUCommandEncoder, delta: number, time: number) => void) {
     this.animation.loop = loop;
   }
@@ -67,13 +73,29 @@ class Renderer {
     const {
       camera,
       canvas,
+      descriptor: { colorAttachments: [color] },
+      device,
+      format,
+      samples,
+      target,
     } = this;
     const pixelRatio = window.devicePixelRatio || 1;
-    canvas.width = Math.floor(width * pixelRatio);
-    canvas.height = Math.floor(height * pixelRatio);
+    const size = [Math.floor(width * pixelRatio), Math.floor(height * pixelRatio)];
+    canvas.width = size[0];
+    canvas.height = size[1];
     canvas.style.width = `${width}px`;
     canvas.style.height = `${height}px`;
     camera.setAspect(width / height);
+    if (target) {
+      target.destroy();
+    }
+    this.target = device.createTexture({
+      format,
+      sampleCount: samples,
+      size,
+      usage: GPUTextureUsage.RENDER_ATTACHMENT,
+    });
+    color!.view = this.target.createView();
   }
 
   private animate() {
@@ -96,9 +118,7 @@ class Renderer {
       scene,
     } = this;
     const { colorAttachments: [color] } = descriptor;
-    if (color) {
-      color.view = context.getCurrentTexture().createView();
-    }
+    color!.resolveTarget = context.getCurrentTexture().createView();
     const pass = command.beginRenderPass(descriptor);
     scene.forEach((object) => object.render(pass));
     pass.end();

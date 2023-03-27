@@ -69,6 +69,7 @@ class Points {
     camera: Camera,
     device: GPUDevice,
     format: GPUTextureFormat,
+    samples: number,
     simulation: Simulation,
   ) {
     this.device = device;
@@ -148,6 +149,9 @@ class Points {
       },
       primitive: {
         topology: 'triangle-list',
+      },
+      multisample: {
+        count: samples,
       },
     });
     this.texture = device.createTexture({

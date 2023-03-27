@@ -23,10 +23,10 @@ const Main = (device: GPUDevice) => {
   renderer.setSize(window.innerWidth, window.innerHeight);
   simulation.load(Cloth());
 
-  const lines = new Lines(camera, device, renderer.getFormat(), simulation);
+  const lines = new Lines(camera, device, renderer.getFormat(), renderer.getSamples(), simulation);
   renderer.add(lines);
 
-  const points = new Points(camera, device, renderer.getFormat(), simulation);
+  const points = new Points(camera, device, renderer.getFormat(), renderer.getSamples(), simulation);
   renderer.add(points);
 
   window.addEventListener('drop', (e) => {
