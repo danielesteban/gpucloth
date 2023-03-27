@@ -1,15 +1,18 @@
-import { Data, Joint } from './types';
+import { Data, Joint, Lines } from './types';
 
 const Compute = (numIterations: number, numPoints: number, numJoints: number) => /* wgsl */`
 ${Data}
 ${Joint}
+${Lines()}
 
 @group(0) @binding(0) var<storage, read> data: array<Data, ${numPoints}>;
 @group(0) @binding(1) var<storage, read> joints: array<Joint, ${numJoints}>;
+@group(0) @binding(2) var<storage, read_write> lines: Lines;
 @group(1) @binding(0) var<storage, read_write> points: array<vec2<f32>, ${numPoints}>;
 
 @compute @workgroup_size(1)
 fn main() {
+  lines.instanceCount = 0;
   for (var j: u32 = 0; j < ${numIterations}; j++) {
     for (var i: u32 = 0; i < ${numJoints}; i++) {
       var joint = joints[i];
@@ -41,6 +44,7 @@ class ConstrainSimulation {
     data: GPUBuffer,
     joints: GPUBuffer,
     numJoints: number,
+    lines: GPUBuffer,
     points: GPUBuffer[],
     numPoints: number
   ) {
@@ -64,6 +68,10 @@ class ConstrainSimulation {
           {
             binding: 1,
             resource: { buffer: joints },
+          },
+          {
+            binding: 2,
+            resource: { buffer: lines },
           },
         ],
       }),

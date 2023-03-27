@@ -51,7 +51,7 @@ export const JointBuffer = (data: Joint[]) => {
   return buffer;
 };
 
-export const Lines = /* wgsl */`
+export const Lines = (atomicCount: boolean = false) => /* wgsl */`
 struct Line {
   position: vec2<f32>,
   rotation: f32,
@@ -59,12 +59,28 @@ struct Line {
 }
 struct Lines {
   vertexCount: u32,
-  instanceCount: atomic<u32>,
+  instanceCount: ${atomicCount ? 'atomic<u32>' : 'u32'},
   firstVertex: u32,
   firstInstance: u32,
   data: array<Line>,
 }
 `;
+
+export const LinesBuffer = (device: GPUDevice, numJoints: number) => {
+  const buffer = device.createBuffer({
+    mappedAtCreation: true,
+    size: 16 + numJoints * 16,
+    usage: (
+      GPUBufferUsage.COPY_DST
+      | GPUBufferUsage.INDIRECT
+      | GPUBufferUsage.STORAGE
+      | GPUBufferUsage.VERTEX
+    ),
+  });
+  new Uint32Array(buffer.getMappedRange(0, 4)).set(new Uint32Array([6]));
+  buffer.unmap();
+  return buffer;
+};
 
 export type Point = {
   x: number;
@@ -87,3 +103,43 @@ struct Uniforms {
   pointer: vec2<f32>,
 }
 `;
+
+export class UniformsBuffer {
+  private readonly buffers: {
+    cpu: ArrayBuffer,
+    gpu: GPUBuffer,
+  };
+  private readonly device: GPUDevice;
+
+  constructor(device: GPUDevice) {
+    const buffer = new ArrayBuffer(16);
+    this.buffers = {
+      cpu: buffer,
+      gpu: device.createBuffer({
+        size: buffer.byteLength,
+        usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.UNIFORM,
+      }),
+    };
+    this.device = device;
+  }
+
+  getBuffer() {
+    return this.buffers.gpu;
+  }
+
+  set button(value: number) {
+    new Uint32Array(this.buffers.cpu, 0, 1)[0] = value;
+  }
+
+  set delta(value: number) {
+    new Float32Array(this.buffers.cpu, 4, 1)[0] = value;
+  }
+
+  set pointer(value: [number, number] | Float32Array) {
+    new Float32Array(this.buffers.cpu, 8, 2).set(value);
+  }
+
+  update() {
+    this.device.queue.writeBuffer(this.buffers.gpu, 0, this.buffers.cpu);
+  }
+}
