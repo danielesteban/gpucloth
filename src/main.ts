@@ -48,6 +48,9 @@ const Main = (device: GPUDevice) => {
         simulation.load(Cloth());
         break;
       case '2':
+        simulation.load(Cloth(1));
+        break;
+      case '3':
         simulation.load(Ropes());
         break;
     }
