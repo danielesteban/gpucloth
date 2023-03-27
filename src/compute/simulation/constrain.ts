@@ -1,9 +1,9 @@
-import { Data, Joint, Lines } from './types';
+import { Data, Joint, Line } from './types';
 
 const Compute = (numIterations: number, numPoints: number, numJoints: number) => /* wgsl */`
 ${Data}
 ${Joint}
-${Lines()}
+${Line()}
 
 @group(0) @binding(0) var<storage, read> data: array<Data, ${numPoints}>;
 @group(0) @binding(1) var<storage, read> joints: array<Joint, ${numJoints}>;

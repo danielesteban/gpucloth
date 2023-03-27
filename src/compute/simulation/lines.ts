@@ -1,8 +1,8 @@
-import { Joint, Lines, Uniforms } from './types';
+import { Joint, Line, Uniforms } from './types';
 
 const Compute = (numPoints: number, numJoints: number) => /* wgsl */`
 ${Joint}
-${Lines(true)}
+${Line(true)}
 ${Uniforms}
 
 @group(0) @binding(0) var<storage, read_write> joints: array<Joint, ${numJoints}>;

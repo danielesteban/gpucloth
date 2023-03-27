@@ -1,7 +1,7 @@
 import ConstrainSimulation from './constrain';
 import ComputeLines from './lines';
 import StepSimulation from './step';
-import { LinesBuffer, UniformsBuffer } from './types';
+import { LineBuffer, UniformsBuffer } from './types';
 
 class Simulation {
   private buffers?: {
@@ -102,7 +102,7 @@ class Simulation {
         joints,
         GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE
       ),
-      lines: LinesBuffer(device, numJoints),
+      lines: LineBuffer(device, numJoints),
       points: Array.from({ length: 2 }, () => createBuffer(
         points,
         GPUBufferUsage.COPY_DST

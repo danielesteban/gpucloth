@@ -6,21 +6,24 @@ struct Data {
 }
 `;
 
-export type Data = {
+export type Point = {
   locked: boolean;
+  position: { x: number; y: number; };
   size: number;
   uv: { x: number, y: number };
 };
 
-export const DataBuffer = (data: Data[]) => {
-  const buffer = new ArrayBuffer(data.length * 16);
-  data.forEach(({ locked, size, uv }, i) => {
+export const PointBuffers = (values: Point[]) => {
+  const data = new ArrayBuffer(values.length * 16);
+  const points = new ArrayBuffer(values.length * 8);
+  values.forEach(({ locked, position, size, uv }, i) => {
     const o = i * 16;
-    new Uint32Array(buffer, o, 1)[0] = locked ? 1 : 0;
-    new Float32Array(buffer, o + 4, 1)[0] = size;
-    new Float32Array(buffer, o + 8, 2).set([uv.x, uv.y]);
+    new Uint32Array(data, o, 1)[0] = locked ? 1 : 0;
+    new Float32Array(data, o + 4, 1)[0] = size;
+    new Float32Array(data, o + 8, 2).set([uv.x, uv.y]);
+    new Float32Array(points, i * 8, 2).set([position.x, position.y]);
   });
-  return buffer;
+  return { data, points };
 };
 
 export const Joint = /* wgsl */`
@@ -51,7 +54,7 @@ export const JointBuffer = (data: Joint[]) => {
   return buffer;
 };
 
-export const Lines = (atomicCount: boolean = false) => /* wgsl */`
+export const Line = (atomicCount: boolean = false) => /* wgsl */`
 struct Line {
   position: vec2<f32>,
   rotation: f32,
@@ -66,7 +69,7 @@ struct Lines {
 }
 `;
 
-export const LinesBuffer = (device: GPUDevice, numJoints: number) => {
+export const LineBuffer = (device: GPUDevice, numJoints: number) => {
   const buffer = device.createBuffer({
     mappedAtCreation: true,
     size: 16 + numJoints * 16,
@@ -79,20 +82,6 @@ export const LinesBuffer = (device: GPUDevice, numJoints: number) => {
   });
   new Uint32Array(buffer.getMappedRange(0, 4)).set(new Uint32Array([6]));
   buffer.unmap();
-  return buffer;
-};
-
-export type Point = {
-  x: number;
-  y: number;
-};
-
-export const PointBuffer = (data: Point[]) => {
-  const buffer = new ArrayBuffer(data.length * 8);
-  data.forEach(({ x, y }, i) => {
-    const o = i * 8;
-    new Float32Array(buffer, o, 2).set([x, y]);
-  });
   return buffer;
 };
 
