@@ -21,7 +21,7 @@ fn main(@builtin(global_invocation_id) id: vec3<u32>) {
     point += vec2<f32>(0, -8) * uniforms.delta;
     if (uniforms.button != 2) {
       var d = point - uniforms.pointer;
-      if (length(d) < 16) {
+      if (length(d) < min(uniforms.radius * 4, 24)) {
         point += d * uniforms.radius * uniforms.delta;
       }
     }
