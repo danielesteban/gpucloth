@@ -1,4 +1,5 @@
 import Camera from './camera';
+import Plane from './plane';
 import Simulation from '../compute/simulation';
 
 const Vertex = /* wgsl */`
@@ -56,24 +57,6 @@ fn main(fragment: FragmentInput) -> @location(0) vec4<f32> {
 }
 `;
 
-const Plane = (device: GPUDevice, width: number = 2, height: number = 2) => {
-  const buffer = device.createBuffer({
-    mappedAtCreation: true,
-    size: 24 * Float32Array.BYTES_PER_ELEMENT,
-    usage: GPUBufferUsage.VERTEX,
-  });
-  new Float32Array(buffer.getMappedRange()).set([
-    width * -0.5, height *  0.5,     0, 1,
-    width *  0.5, height *  0.5,     1, 1,
-    width *  0.5, height * -0.5,     1, 0,
-    width *  0.5, height * -0.5,     1, 0,
-    width * -0.5, height * -0.5,     0, 0,
-    width * -0.5, height *  0.5,     0, 1,
-  ]);
-  buffer.unmap();
-  return buffer;
-};
-
 class Points {
   private readonly bindings: GPUBindGroup;
   private readonly device: GPUDevice;
@@ -89,7 +72,7 @@ class Points {
     simulation: Simulation,
   ) {
     this.device = device;
-    this.geometry = Plane(device);
+    this.geometry = Plane(device, 2, 2);
     this.pipeline = device.createRenderPipeline({
       layout: 'auto',
       vertex: {
@@ -196,7 +179,7 @@ class Points {
 
   render(pass: GPURenderPassEncoder) {
     const { bindings, geometry, pipeline, simulation } = this;
-    const { count, data, points } = simulation.getInstances();
+    const { count, data, points } = simulation.getBuffers();
     pass.setPipeline(pipeline);
     pass.setBindGroup(0, bindings);
     pass.setVertexBuffer(0, geometry);

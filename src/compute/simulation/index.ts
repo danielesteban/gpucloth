@@ -1,11 +1,13 @@
 import { vec2 } from 'gl-matrix';
 import ConstrainSimulation from './constrain';
+import ComputeLines from './lines';
 import StepSimulation from './step';
 
 class Simulation {
   private buffers?: {
     data: GPUBuffer;
     joints: GPUBuffer;
+    lines: GPUBuffer;
     points: GPUBuffer[];
   };
   private count: number = 0;
@@ -16,6 +18,7 @@ class Simulation {
   };
   private pipelines?: {
     constraint: ConstrainSimulation,
+    lines: ComputeLines,
     step: StepSimulation,
   };
   private step: number = 0;
@@ -54,9 +57,9 @@ class Simulation {
     delta: number,
     pointer: { button: number; position: vec2; }
   ) {
-    const { device, pipelines, step, uniforms } = this;
+    const { device, buffers, pipelines, step, uniforms } = this;
 
-    if (!pipelines) {
+    if (!buffers || !pipelines) {
       return;
     }
 
@@ -65,10 +68,12 @@ class Simulation {
     uniforms.pointer.set(pointer.position);
     device.queue.writeBuffer(uniforms.buffers.gpu, 0, uniforms.buffers.cpu);
 
+    command.clearBuffer(buffers.lines, 4, 4);
     const pass = command.beginComputePass();
     pipelines.step.compute(pass, step);
     this.step = (this.step + 1) % 2;
     pipelines.constraint.compute(pass, this.step);
+    pipelines.lines.compute(pass, this.step);
     pass.end();
   }
 
@@ -96,8 +101,21 @@ class Simulation {
     if (this.buffers) {
       this.buffers.data.destroy();
       this.buffers.joints.destroy();
+      this.buffers.lines.destroy();
       this.buffers.points.forEach((buffer) => buffer.destroy());
     }
+    const lines = device.createBuffer({
+      mappedAtCreation: true,
+      size: 16 + numJoints * 16,
+      usage: (
+        GPUBufferUsage.COPY_DST
+        | GPUBufferUsage.INDIRECT
+        | GPUBufferUsage.STORAGE
+        | GPUBufferUsage.VERTEX
+      ),
+    });
+    new Uint32Array(lines.getMappedRange(0, 4)).set(new Uint32Array([6]));
+    lines.unmap();
     this.buffers = {
       data: createBuffer(
         data,
@@ -107,6 +125,7 @@ class Simulation {
         joints,
         GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE
       ),
+      lines,
       points: Array.from({ length: 2 }, () => createBuffer(
         points,
         GPUBufferUsage.COPY_DST
@@ -123,6 +142,14 @@ class Simulation {
         this.buffers.joints,
         numJoints,
         this.buffers.points,
+        numPoints
+      ),
+      lines: new ComputeLines(
+        device,
+        this.buffers.joints,
+        numJoints,
+        this.buffers.lines,
+        this.buffers.points,
         numPoints,
         this.uniforms.buffers.gpu
       ),
@@ -136,7 +163,7 @@ class Simulation {
     };
   }
 
-  getInstances() {
+  getBuffers() {
     const { buffers, count, step } = this;
     if (!buffers) {
       throw new Error("Simulation is not loaded");
@@ -144,6 +171,7 @@ class Simulation {
     return {
       count,
       data: buffers.data,
+      lines: buffers.lines,
       points: buffers.points[step],
     };
   }

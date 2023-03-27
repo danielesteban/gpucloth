@@ -1,8 +1,9 @@
 import './main.css';
 import Camera from './render/camera';
 import Input from './compute/input';
-import Renderer from './render/renderer';
+import Lines from './render/lines';
 import Points from './render/points';
+import Renderer from './render/renderer';
 import Simulation from './compute/simulation';
 import { Cloth, Rope } from './compute/generation';
 
@@ -21,6 +22,9 @@ const Main = (device: GPUDevice) => {
   ));
   renderer.setSize(window.innerWidth, window.innerHeight);
   simulation.load(Cloth());
+
+  const lines = new Lines(camera, device, renderer.getFormat(), simulation);
+  renderer.add(lines);
 
   const points = new Points(camera, device, renderer.getFormat(), simulation);
   renderer.add(points);

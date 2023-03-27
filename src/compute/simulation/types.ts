@@ -51,6 +51,21 @@ export const JointBuffer = (data: Joint[]) => {
   return buffer;
 };
 
+export const Lines = /* wgsl */`
+struct Line {
+  position: vec2<f32>,
+  rotation: f32,
+  size: f32,
+}
+struct Lines {
+  vertexCount: u32,
+  instanceCount: atomic<u32>,
+  firstVertex: u32,
+  firstInstance: u32,
+  data: array<Line>,
+}
+`;
+
 export type Point = {
   x: number;
   y: number;
