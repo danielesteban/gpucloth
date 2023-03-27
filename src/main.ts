@@ -4,6 +4,7 @@ import Input from './compute/input';
 import Renderer from './render/renderer';
 import Points from './render/points';
 import Simulation from './compute/simulation';
+import { Cloth, Rope } from './compute/generation';
 
 const Main = (device: GPUDevice) => {
   const camera = new Camera(device);
@@ -19,17 +20,11 @@ const Main = (device: GPUDevice) => {
     simulation.compute(command, delta, input.getPointer(camera))
   ));
   renderer.setSize(window.innerWidth, window.innerHeight);
-  window.addEventListener('keydown', ({ key, repeat }) => (
-    !repeat && key === 'Escape' && simulation.reset()
-  ));
-  window.addEventListener('resize', () => (
-    renderer.setSize(window.innerWidth, window.innerHeight)
-  ));
-  window.addEventListener('wheel', ({ deltaY }) => (
-    camera.setZoom(Math.min(Math.max(camera.getZoom() * (1 + deltaY * 0.001), 200), 400))
-  ));
+  simulation.load(Cloth());
 
   const points = new Points(camera, device, renderer.getFormat(), simulation);
+  renderer.add(points);
+
   window.addEventListener('drop', (e) => {
     e.preventDefault();
     const [file] = e.dataTransfer?.files || [];
@@ -37,7 +32,28 @@ const Main = (device: GPUDevice) => {
       points.setTexture(file);
     }
   });
-  renderer.add(points);
+  window.addEventListener('keydown', ({ key, repeat }) => {
+    if (repeat) {
+      return;
+    }
+    switch (key) {
+      case 'Escape':
+        simulation.reset()
+        break;
+      case '1':
+        simulation.load(Cloth());
+        break;
+      case '2':
+        simulation.load(Rope());
+        break;
+    }
+  });
+  window.addEventListener('resize', () => (
+    renderer.setSize(window.innerWidth, window.innerHeight)
+  ));
+  window.addEventListener('wheel', ({ deltaY }) => (
+    camera.setZoom(Math.min(Math.max(camera.getZoom() * (1 + deltaY * 0.001), 200), 400))
+  ));
 };
 
 const GPU = async () => {

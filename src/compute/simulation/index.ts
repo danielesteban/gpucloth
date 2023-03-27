@@ -1,19 +1,20 @@
 import { vec2 } from 'gl-matrix';
-import Generate from './generate';
 import ConstrainSimulation from './constrain';
 import StepSimulation from './step';
 
 class Simulation {
+  private buffers?: {
+    data: GPUBuffer;
+    joints: GPUBuffer;
+    points: GPUBuffer[];
+  };
+  private count: number = 0;
   private device: GPUDevice;
-  private readonly count: number;
-  private readonly initial: {
+  private initial?: {
     joints: ArrayBuffer;
     points: ArrayBuffer;
   };
-  private readonly data: GPUBuffer;
-  private readonly joints: GPUBuffer;
-  private readonly points: GPUBuffer[];
-  private readonly pipelines: {
+  private pipelines?: {
     constraint: ConstrainSimulation,
     step: StepSimulation,
   };
@@ -29,36 +30,7 @@ class Simulation {
   };
 
   constructor(device: GPUDevice) {
-    const { data, joints, numJoints, points, numPoints } = Generate();
-    this.count = numPoints;
     this.device = device;
-    this.initial = { joints, points };
-
-    const buffer = (data: ArrayBuffer, usage: number) => {
-      const buffer = device.createBuffer({
-        mappedAtCreation: true,
-        size: data.byteLength,
-        usage,
-      });
-      new Uint32Array(buffer.getMappedRange()).set(new Uint32Array(data));
-      buffer.unmap();
-      return buffer;
-    };
-
-    this.data = buffer(
-      data,
-      GPUBufferUsage.STORAGE | GPUBufferUsage.VERTEX
-    );
-    this.joints = buffer(
-      joints,
-      GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE
-    );
-    this.points = Array.from({ length: 2 }, () => buffer(
-      points,
-      GPUBufferUsage.COPY_DST
-      | GPUBufferUsage.STORAGE
-      | GPUBufferUsage.VERTEX
-    ));
 
     {
       const cpu = new ArrayBuffer(16);
@@ -75,33 +47,6 @@ class Simulation {
         },
       };
     }
-  
-    this.pipelines = {
-      constraint: new ConstrainSimulation(
-        device,
-        this.data,
-        this.joints,
-        numJoints,
-        this.points,
-        numPoints,
-        this.uniforms.buffers.gpu
-      ),
-      step: new StepSimulation(
-        device,
-        this.data,
-        this.points,
-        numPoints,
-        this.uniforms.buffers.gpu
-      ),
-    };
-  }
-
-  getInstances() {
-    return {
-      count: this.count,
-      data: this.data,
-      points: this.points[this.step],
-    };
   }
 
   compute(
@@ -110,6 +55,10 @@ class Simulation {
     pointer: { button: number; position: vec2; }
   ) {
     const { device, pipelines, step, uniforms } = this;
+
+    if (!pipelines) {
+      return;
+    }
 
     uniforms.delta[0] = delta;
     uniforms.button[0] = pointer.button;
@@ -122,11 +71,90 @@ class Simulation {
     pipelines.constraint.compute(pass, this.step);
     pass.end();
   }
+
+  load(
+    { data, joints, numJoints, points, numPoints }: {
+      data: ArrayBuffer;
+      joints: ArrayBuffer;
+      numJoints: number;
+      points: ArrayBuffer;
+      numPoints: number;
+    }
+  ) {
+    const { device } = this;
+    const createBuffer = (data: ArrayBuffer, usage: number) => {
+      const buffer = device.createBuffer({
+        mappedAtCreation: true,
+        size: data.byteLength,
+        usage,
+      });
+      new Uint32Array(buffer.getMappedRange()).set(new Uint32Array(data));
+      buffer.unmap();
+      return buffer;
+    };
+
+    if (this.buffers) {
+      this.buffers.data.destroy();
+      this.buffers.joints.destroy();
+      this.buffers.points.forEach((buffer) => buffer.destroy());
+    }
+    this.buffers = {
+      data: createBuffer(
+        data,
+        GPUBufferUsage.STORAGE | GPUBufferUsage.VERTEX
+      ),
+      joints: createBuffer(
+        joints,
+        GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE
+      ),
+      points: Array.from({ length: 2 }, () => createBuffer(
+        points,
+        GPUBufferUsage.COPY_DST
+        | GPUBufferUsage.STORAGE
+        | GPUBufferUsage.VERTEX
+      )),
+    };
+    this.count = numPoints;
+    this.initial = { joints, points };
+    this.pipelines = {
+      constraint: new ConstrainSimulation(
+        device,
+        this.buffers.data,
+        this.buffers.joints,
+        numJoints,
+        this.buffers.points,
+        numPoints,
+        this.uniforms.buffers.gpu
+      ),
+      step: new StepSimulation(
+        device,
+        this.buffers.data,
+        this.buffers.points,
+        numPoints,
+        this.uniforms.buffers.gpu
+      ),
+    };
+  }
+
+  getInstances() {
+    const { buffers, count, step } = this;
+    if (!buffers) {
+      throw new Error("Simulation is not loaded");
+    }
+    return {
+      count,
+      data: buffers.data,
+      points: buffers.points[step],
+    };
+  }
   
   reset() {
-    const { device, initial, joints, points } = this;
-    device.queue.writeBuffer(joints, 0, initial.joints);
-    points.forEach((buffer) => (
+    const { buffers, device, initial } = this;
+    if (!buffers || !initial) {
+      return;
+    }
+    device.queue.writeBuffer(buffers.joints, 0, initial.joints);
+    buffers.points.forEach((buffer) => (
       device.queue.writeBuffer(buffer, 0, initial.points)
     ));
   }

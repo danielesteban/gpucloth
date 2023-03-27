@@ -1,4 +1,4 @@
-import { Data, DataBuffer, Joint, JointBuffer, Point, PointBuffer } from './types';
+import { Data, DataBuffer, Joint, JointBuffer, Point, PointBuffer } from '../simulation/types';
 
 export default () => {
   const width = 33;

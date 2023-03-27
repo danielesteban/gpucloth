@@ -13,7 +13,7 @@ class Input {
     this.pointer = {
       id: -1,
       button: 0,
-      normalized: vec2.create(),
+      normalized: vec2.fromValues(-1, -1),
       position: vec2.create(),
     };
     target.addEventListener('pointerdown', this.onPointerDown.bind(this));
