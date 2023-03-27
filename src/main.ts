@@ -5,7 +5,7 @@ import Lines from './render/lines';
 import Points from './render/points';
 import Renderer from './render/renderer';
 import Simulation from './compute/simulation';
-import { Cloth, Rope } from './compute/generation';
+import { Cloth, Ropes } from './compute/generation';
 
 const Main = (device: GPUDevice) => {
   const camera = new Camera(device);
@@ -48,7 +48,7 @@ const Main = (device: GPUDevice) => {
         simulation.load(Cloth());
         break;
       case '2':
-        simulation.load(Rope());
+        simulation.load(Ropes());
         break;
     }
   });

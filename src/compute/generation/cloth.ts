@@ -12,7 +12,7 @@ export default () => {
         locked: y === height - 1 && (x % 8 === 0),
         position: {
           x: (x - width * 0.5 + 0.5) * gap * 1.125 + gap * (Math.random() - 0.25) * 0.125,
-          y: (y - height * 0.5 + 0.5) * gap + gap * (Math.random() - 0.5) * 0.125,
+          y: (y - height * 0.5 + 0.5) * gap + gap * (Math.random() - 0.5) * 0.125 + height * gap * 0.2,
         },
         size: 1.5 + Math.random() * 0.5,
         uv: {

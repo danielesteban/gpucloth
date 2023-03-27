@@ -16,7 +16,7 @@ class Camera {
     this.near = -100;
     this.far = 100;
     this.zoom = 200;
-    this.position = vec2.fromValues(0, -24);
+    this.position = vec2.create();
 
     this.matrix = mat4.create();
     this.matrixInverse = mat4.create();
