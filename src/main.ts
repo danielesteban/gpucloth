@@ -34,8 +34,8 @@ const Main = (device: GPUDevice) => {
     2: () => simulation.load(Cloth(false, true)),
     3: () => simulation.load(Ropes()),
     4: () => simulation.load(Cloth(true, false)),
-    5 : () => simulation.load(Cloth(true, true)),
-    'escape': () => simulation.reset(),
+    5: () => simulation.load(Cloth(true, true)),
+    escape: () => simulation.reset(),
   });
   window.addEventListener('drop', (e) => {
     e.preventDefault();
