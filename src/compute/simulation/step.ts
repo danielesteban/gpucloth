@@ -22,7 +22,7 @@ fn main(@builtin(global_invocation_id) id: vec3<u32>) {
     if (uniforms.button != 2) {
       var d = point - uniforms.pointer;
       if (length(d) < 16) {
-        point += d * 4 * uniforms.delta;
+        point += d * uniforms.radius * uniforms.delta;
       }
     }
   }

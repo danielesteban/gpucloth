@@ -42,6 +42,10 @@ body, #app {
   left: 1rem;
 }
 
+#help.hidden {
+  display: none;
+}
+
 #help > div {
   color: #bbb;
 }

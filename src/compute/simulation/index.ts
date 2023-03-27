@@ -32,7 +32,8 @@ class Simulation {
   compute(
     command: GPUCommandEncoder,
     delta: number,
-    pointer: { button: number; position: [number, number] | Float32Array; }
+    pointer: { button: number; position: [number, number] | Float32Array; },
+    radius: number
   ) {
     const { buffers, pipelines, step, uniforms } = this;
 
@@ -43,6 +44,7 @@ class Simulation {
     uniforms.delta = delta;
     uniforms.button = pointer.button;
     uniforms.pointer = pointer.position;
+    uniforms.radius = radius;
     uniforms.update();
 
     const pass = command.beginComputePass();

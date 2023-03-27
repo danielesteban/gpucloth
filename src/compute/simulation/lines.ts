@@ -29,7 +29,7 @@ fn main(@builtin(global_invocation_id) id: vec3<u32>) {
   }
   if (uniforms.button == 2) {
     if (
-      sdSegment(uniforms.pointer, points[joint.a], points[joint.b]) <= 1
+      sdSegment(uniforms.pointer, points[joint.a], points[joint.b]) <= uniforms.radius * 0.25
     ) {
       joints[index].enabled = 0;
       return;

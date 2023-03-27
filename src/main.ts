@@ -18,7 +18,7 @@ const Main = (device: GPUDevice) => {
   }
   dom.appendChild(renderer.getCanvas());
   renderer.setAnimationLoop((command, delta) => (
-    simulation.compute(command, delta, input.getPointer(camera))
+    simulation.compute(command, delta, input.getPointer(camera), camera.getZoom() * 0.02)
   ));
   renderer.setSize(window.innerWidth, window.innerHeight);
 
@@ -36,6 +36,7 @@ const Main = (device: GPUDevice) => {
     4: () => simulation.load(Cloth(true, false)),
     5: () => simulation.load(Cloth(true, true)),
     escape: () => simulation.reset(),
+    '?': () => document.getElementById('help')?.classList.toggle('hidden'), 
   });
   window.addEventListener('drop', (e) => {
     e.preventDefault();

@@ -90,6 +90,7 @@ struct Uniforms {
   button: u32,
   delta: f32,
   pointer: vec2<f32>,
+  radius: f32,
 }
 `;
 
@@ -101,7 +102,7 @@ export class UniformsBuffer {
   private readonly device: GPUDevice;
 
   constructor(device: GPUDevice) {
-    const buffer = new ArrayBuffer(16);
+    const buffer = new ArrayBuffer(24);
     this.buffers = {
       cpu: buffer,
       gpu: device.createBuffer({
@@ -126,6 +127,10 @@ export class UniformsBuffer {
 
   set pointer(value: [number, number] | Float32Array) {
     new Float32Array(this.buffers.cpu, 8, 2).set(value);
+  }
+
+  set radius(value: number) {
+    new Float32Array(this.buffers.cpu, 16, 1)[0] = value;
   }
 
   update() {
