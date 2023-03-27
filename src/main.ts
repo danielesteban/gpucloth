@@ -31,8 +31,10 @@ const Main = (device: GPUDevice) => {
 
   input.setHotkeys({
     1: () => simulation.load(Cloth()),
-    2: () => simulation.load(Cloth(1)),
+    2: () => simulation.load(Cloth(false, true)),
     3: () => simulation.load(Ropes()),
+    4: () => simulation.load(Cloth(true, false)),
+    5 : () => simulation.load(Cloth(true, true)),
     'escape': () => simulation.reset(),
   });
   window.addEventListener('drop', (e) => {
