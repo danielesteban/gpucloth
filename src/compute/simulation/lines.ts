@@ -19,7 +19,7 @@ fn sdSegment(p: vec2<f32>, a: vec2<f32>, b: vec2<f32>) -> f32 {
 
 @compute @workgroup_size(256)
 fn main(@builtin(global_invocation_id) id: vec3<u32>) {
-  let index : u32 = id.x;
+  let index: u32 = id.x;
   if (index >= ${numJoints}) {
     return;
   }

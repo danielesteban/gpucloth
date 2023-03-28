@@ -1,5 +1,5 @@
 import Camera from './camera';
-import Plane from './plane';
+import { Plane } from './geometry';
 import Simulation from '../compute/simulation';
 
 const Vertex = /* wgsl */`
@@ -16,15 +16,15 @@ struct VertexOutput {
 
 @group(0) @binding(0) var<uniform> camera: mat4x4<f32>;
 
-fn rotate(rad : f32) -> mat2x2<f32> {
-  var c : f32 = cos(rad);
-  var s : f32 = sin(rad);
+fn rotate(rad: f32) -> mat2x2<f32> {
+  var c: f32 = cos(rad);
+  var s: f32 = sin(rad);
   return mat2x2<f32>(c, s, -s, c);
 }
 
 @vertex
 fn main(vertex: VertexInput) -> VertexOutput {
-  var out : VertexOutput;
+  var out: VertexOutput;
   out.position = camera * vec4<f32>(vertex.position * vec2<f32>(1, vertex.isize) * rotate(vertex.irotation) + vertex.iposition, 0, 1);
   return out;
 }

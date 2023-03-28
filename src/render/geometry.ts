@@ -1,4 +1,4 @@
-export default (device: GPUDevice, width: number = 1, height: number = 1) => {
+export const Plane = (device: GPUDevice, width: number = 1, height: number = 1) => {
   const buffer = device.createBuffer({
     mappedAtCreation: true,
     size: 24 * Float32Array.BYTES_PER_ELEMENT,

@@ -1,40 +1,40 @@
 import Camera from './camera';
-import Plane from './plane';
+import { Plane } from './geometry';
 import Simulation from '../compute/simulation';
 
 const Vertex = /* wgsl */`
 struct VertexInput {
   @location(0) position: vec2<f32>,
   @location(1) uv: vec2<f32>,
-  @location(2) isize: f32,
-  @location(3) iuv: vec2<f32>,
-  @location(4) iposition: vec2<f32>,
+  @location(2) iposition: vec2<f32>,
+  @location(3) isize: f32,
+  @location(4) iuv: vec2<f32>,
 }
 struct VertexOutput {
   @builtin(position) position: vec4<f32>,
-  @location(0) uv : vec2<f32>,
-  @location(1) uv2 : vec2<f32>,
-  @location(2) size : f32,
+  @location(0) size: f32,
+  @location(1) uv: vec2<f32>,
+  @location(2) uv2: vec2<f32>,
 }
 
 @group(0) @binding(0) var<uniform> camera: mat4x4<f32>;
 
 @vertex
 fn main(vertex: VertexInput) -> VertexOutput {
-  var out : VertexOutput;
+  var out: VertexOutput;
   out.position = camera * vec4<f32>(vertex.position * vertex.isize + vertex.iposition, 0, 1);
+  out.size = vertex.isize;
   out.uv = (vertex.uv - 0.5) * 2;
   out.uv2 = vertex.iuv;
-  out.size = vertex.isize;
   return out;
 }
 `;
 
 const Fragment = /* wgsl */`
 struct FragmentInput {
-  @location(0) uv: vec2<f32>,
-  @location(1) uv2: vec2<f32>,
-  @location(2) size: f32,
+  @location(0) size: f32,
+  @location(1) uv: vec2<f32>,
+  @location(2) uv2: vec2<f32>,
 }
 
 @group(0) @binding(1) var texture: texture_2d<f32>;
@@ -94,32 +94,32 @@ class Points {
             ],
           },
           {
-            arrayStride: 4 * Float32Array.BYTES_PER_ELEMENT,
+            arrayStride: 2 * Float32Array.BYTES_PER_ELEMENT,
             stepMode: 'instance',
             attributes: [
               {
                 shaderLocation: 2,
-                offset: 1 * Float32Array.BYTES_PER_ELEMENT,
-                format: 'float32',
-              },
-              {
-                shaderLocation: 3,
-                offset: 2 * Float32Array.BYTES_PER_ELEMENT,
+                offset: 0,
                 format: 'float32x2',
               },
             ],
           },
           {
-            arrayStride: 2 * Float32Array.BYTES_PER_ELEMENT,
+            arrayStride: 4 * Float32Array.BYTES_PER_ELEMENT,
             stepMode: 'instance',
             attributes: [
               {
+                shaderLocation: 3,
+                offset: 1 * Float32Array.BYTES_PER_ELEMENT,
+                format: 'float32',
+              },
+              {
                 shaderLocation: 4,
-                offset: 0,
+                offset: 2 * Float32Array.BYTES_PER_ELEMENT,
                 format: 'float32x2',
               },
             ],
-          }
+          },
         ],
         entryPoint: 'main',
         module: device.createShaderModule({
@@ -187,8 +187,8 @@ class Points {
     pass.setPipeline(pipeline);
     pass.setBindGroup(0, bindings);
     pass.setVertexBuffer(0, geometry);
-    pass.setVertexBuffer(1, data);
-    pass.setVertexBuffer(2, points);
+    pass.setVertexBuffer(1, points);
+    pass.setVertexBuffer(2, data);
     pass.draw(6, count, 0, 0);
   }
 

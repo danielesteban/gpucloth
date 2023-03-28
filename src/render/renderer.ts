@@ -12,8 +12,8 @@ class Renderer {
   private readonly descriptor: GPURenderPassDescriptor;
   private readonly device: GPUDevice;
   private readonly format: GPUTextureFormat;
+  private readonly objects: { render: (pass: GPURenderPassEncoder) => void }[];
   private readonly samples: number = 4;
-  private readonly scene: { render: (pass: GPURenderPassEncoder) => void }[];
   private target: GPUTexture = undefined as unknown as GPUTexture;
 
   constructor(camera: Camera, device: GPUDevice) {
@@ -37,7 +37,7 @@ class Renderer {
       ],
     };
     this.device = device;
-    this.scene = [];
+    this.objects = [];
 
     this.animate = this.animate.bind(this);
     this.animation = {
@@ -50,7 +50,7 @@ class Renderer {
   }
 
   add(object: { render: (pass: GPURenderPassEncoder) => void }) {
-    this.scene.push(object);
+    this.objects.push(object);
   }
 
   getCanvas() {
@@ -115,12 +115,12 @@ class Renderer {
     const {
       context,
       descriptor,
-      scene,
+      objects,
     } = this;
     const { colorAttachments: [color] } = descriptor;
     color!.resolveTarget = context.getCurrentTexture().createView();
     const pass = command.beginRenderPass(descriptor);
-    scene.forEach((object) => object.render(pass));
+    objects.forEach((object) => object.render(pass));
     pass.end();
   }
 

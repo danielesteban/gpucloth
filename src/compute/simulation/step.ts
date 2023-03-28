@@ -11,7 +11,7 @@ ${Uniforms}
 
 @compute @workgroup_size(256)
 fn main(@builtin(global_invocation_id) id: vec3<u32>) {
-  let index : u32 = id.x;
+  let index: u32 = id.x;
   if (index >= ${numPoints}) {
     return;
   }
