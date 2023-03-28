@@ -11,11 +11,12 @@ import terser from '@rollup/plugin-terser';
 import typescript from '@rollup/plugin-typescript';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const outputPath = path.resolve(__dirname, 'dist');
 const production = !process.env.ROLLUP_WATCH;
-const token = production ? (
-  'AuOnVGFNYwYQU7KyEmJfKnqlJPe3MlARXRXqvOuUDxa6KOnYbDbF6LlL6C82b9tt32lLCD6QV2ISevQB4+pYggkAAABUeyJvcmlnaW4iOiJodHRwczovL2dwdWNsb3RoLmdhdHVuZXMuY29tOjQ0MyIsImZlYXR1cmUiOiJXZWJHUFUiLCJleHBpcnkiOjE2OTE3MTE5OTl9'
-) : (
+const outputPath = path.resolve(__dirname, 'dist');
+
+// Trial for WebGPU
+// https://developer.chrome.com/origintrials/#/view_trial/118219490218475521
+const originTrial = process.env.WEBGPU_ORIGIN_TRIAL || (
   'AvMV7+QuKgPxuDvjlFx3+twwSmQTXtOiBWJxkIz/C0SdqdDbaYdk6fYULy2nZgs6uu0+ymOmQnAoJDI5JKFfNAoAAABJeyJvcmlnaW4iOiJodHRwOi8vbG9jYWxob3N0OjgwODAiLCJmZWF0dXJlIjoiV2ViR1BVIiwiZXhwaXJ5IjoxNjkxNzExOTk5fQ=='
 );
 
@@ -33,7 +34,7 @@ export default {
     html({
       template: ({ files }) => (
         fs.readFileSync(path.join(__dirname, 'src', 'index.html'), 'utf8')
-          .replace('__TOKEN__', token)
+          .replace('__WEBGPU_ORIGIN_TRIAL__', originTrial)
           .replace(
             '<link rel="stylesheet">',
             (files.css || [])
