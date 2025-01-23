@@ -53,7 +53,7 @@ fn main(fragment: FragmentInput) -> @location(0) vec4<f32> {
   var uv = fragment.uv2 + (fragment.uv / fragment.size / 33);
   return vec4<f32>(linearTosRGB(
     textureSample(texture, textureSampler, uv).xyz + smoothstep(0.5, 1, l) * 0.1
-  ), smoothstep(1, 0.8, l));
+  ), 1 - smoothstep(0.8, 1, l));
 }
 `;
 
